@@ -5,8 +5,6 @@ import java.util.ArrayList;
 public class Player {
     private String name;
     private ArrayList<Card> hand = new ArrayList<Card>();
-    private boolean trucou = false;
-    private boolean accept = true;
 
     public Player(String name) {
         this.name = name;
@@ -37,30 +35,11 @@ public class Player {
         this.hand.remove(index);
     }
 
-    public boolean trucou() {
-        if(this.trucou == true) return true;
-        return false;
-    }
-
-    public void setTrucou(boolean trucou) {
-        if (trucou == true) {
-            this.trucou = true;
-        } else if (trucou == false) this.trucou = false;
-    }
-
-    public boolean accept() {
-        if(this.accept == false) return false;
-        return true;
-    }
-
-    public void setAccept(boolean accept) {
-        if (accept == false) {
-            this.accept = false;
-        } else if (accept == true) this.accept = true;
-    }
-
-
     public Integer handSize() {
         return this.hand.size();
+    }
+
+    public void clearHand() {
+        this.hand.clear();
     }
 }

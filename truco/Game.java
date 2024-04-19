@@ -14,6 +14,8 @@ public class Game {
     private Player player1;
     private Player player2;
     private Player prevPlayer;
+    private int trucado;
+    private boolean accept;
     private Scanner scanner = new Scanner(System.in);
 
     public Game() {
@@ -72,60 +74,38 @@ public class Game {
     public void play() {
         setHands();
         setVira();
-        player1.setTrucou(false);
-        player2.setTrucou(false);
-        boolean trucado = false;
+        this.trucado = 0;
+        this.accept = true;
 
         for (int i = 0; i < 3; i++) {
             showVira();
             showHands();
             Card choosedCard1 = null;
             Card choosedCard2 = null;
+            boolean end;
+
+            // If player1 started the last game
             if(this.prevPlayer == player1) {
+
+                end = verifyTrucoPlayer2();
+                if(end) break;
                 choosedCard2 = chooseCards(player2);
 
-                if(!trucado) {
-                    trucar(player1);
-                    if (player1.trucou()) {
-                        trucado = true;
-                        acceptTruco(player2);
-                        if(!player2.accept()) {
-                            this.tempScore = 3;
-                            break;
-                        }
-                        trucar(player2);
-                        acceptTruco(player1);
-                        if (!player1.accept()) {
-                            this.tempScore2 = 3;
-                            break;
-                        }
-                    }
-                }
-
+                end = verifyTrucoPlayer1();
+                if(end) break;
                 choosedCard1 = chooseCards(player1);
 
                 this.prevPlayer = player2;
+
+            // The first game or if player2 started the last game
             } else {
+
+                end = verifyTrucoPlayer1();
+                if(end) break;
                 choosedCard1 = chooseCards(player1);
 
-                if(!trucado) {
-                    trucar(player2);
-                    if (player2.trucou()) {
-                        trucado = true;
-                        acceptTruco(player1);
-                        if(!player1.accept()) {
-                            this.tempScore2 = 3;
-                            break;
-                        }
-                        trucar(player1);
-                        acceptTruco(player2);
-                        if (!player2.accept()) {
-                            this.tempScore = 3;
-                            break;
-                        }
-                    }
-                }
-
+                end = verifyTrucoPlayer2();
+                if(end) break;
                 choosedCard2 = chooseCards(player2);
 
                 this.prevPlayer = player1;
@@ -133,9 +113,7 @@ public class Game {
             System.out.println("\n");
             setPoints(choosedCard1, choosedCard2);
         }
-        if (this.tempScore > this.tempScore2) {
-            this.score1 ++;
-        } else if (this.tempScore2 > this.tempScore) this.score2 ++;
+        setMatchPoints();
     }
 
     public void setVira() {
@@ -146,19 +124,21 @@ public class Game {
     }
 
     public void setHands() {
-        for (int i = 0; i < 3; i++) {
-            ArrayList<Card> shuffleCards = cards.getCards();
-            // Generates a random card
-            Collections.shuffle(shuffleCards);
-            Card shuffleCard = shuffleCards.get(0);
-            player1.setHand(shuffleCard);
+        if(player1.handSize() > 0) {
+            player1.clearHand();
         }
+        if(player2.handSize() > 0) {
+            player2.clearHand();
+        }
+
         for (int i = 0; i < 3; i++) {
             ArrayList<Card> shuffleCards = cards.getCards();
             // Generates a random card
             Collections.shuffle(shuffleCards);
             Card shuffleCard = shuffleCards.get(0);
-            player2.setHand(shuffleCard);
+            Card shuffleCard2 = shuffleCards.get(1);
+            player1.setHand(shuffleCard);
+            player2.setHand(shuffleCard2);
         }
     }
 
@@ -205,18 +185,109 @@ public class Game {
         }
     }
 
+    public boolean verifyTrucoPlayer1() {
+        if(trucado == 0) {
+            trucar(player1);
+            if (trucado != 0) {
+                accept = acceptTruco(player2);
+                if (!accept) {
+                    tempScore = 5;
+                    trucado = 0;
+                    return true;
+                }
+                trucar(player2);
+                if (trucado == 2) {
+                    accept = acceptTruco(player1);
+                    if (!accept) {
+                        tempScore2 = 5;
+                        trucado = 1;
+                        return true;
+                    }
+                    trucar(player1);
+                    if (trucado == 3) {
+                        accept = acceptTruco(player2);
+                        if (!accept) {
+                            tempScore = 5;
+                            trucado = 2;
+                            return true;
+                        }
+                    }
+                    trucar(player2);
+                    if (trucado == 4) {
+                        accept = acceptTruco(player1);
+                        if (!accept) {
+                            tempScore2 = 5;
+                            trucado = 3;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean verifyTrucoPlayer2() {
+        if(trucado == 0 && trucado < 4) {
+            trucar(player2); 
+            if (trucado != 0) {
+                accept = acceptTruco(player1);
+                if (!accept) {
+                    tempScore2 = 5;
+                    trucado = 0;
+                    return true;
+                }
+                trucar(player1);
+                if (trucado == 2) {
+                    accept = acceptTruco(player2);
+                    if (!accept) {
+                        tempScore = 5;
+                        trucado = 1;
+                        return true;
+                    }
+                    trucar(player2);
+                    if (trucado == 3) {
+                        accept = acceptTruco(player1);
+                        if (!accept) {
+                            tempScore2 = 5;
+                            trucado = 2;
+                            return true;
+                        }
+                    }
+                    trucar(player1);
+                    if (trucado == 4) {
+                        accept = acceptTruco(player2);
+                        if (!accept) {
+                            tempScore = 5;
+                            trucado = 3;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public void trucar(Player player) {
         for (;;) {
-            System.out.println(player.playerName() + ", deseja trucar? (s/n): ");
+            if (trucado == 1) {
+                System.out.println(player.playerName() + ", você pede 6? (s/n): ");
+            } else if (trucado == 2) {
+                System.out.println(player.playerName() + ", você pede 9? (s/n): ");
+            } else if (trucado == 3) {
+                System.out.println(player.playerName() + ", você pede 12? (s/n): ");
+            } else {
+                System.out.println(player.playerName() + ", deseja trucar? (s/n): ");
+            }
             scanner.nextLine();
             String response = scanner.nextLine();
             char charResponse = response.charAt(0);
 
             if (charResponse == 'n') {
-                player.setTrucou(false);
-                break;
+                break; 
             } else if (charResponse == 's') {
-                player.setTrucou(true);
+                this.trucado++;
                 break;
             } else {
                 System.out.println("A resposta deve ser 's' ou 'n'\n");
@@ -224,7 +295,7 @@ public class Game {
         }
     }
 
-    public void acceptTruco(Player player) {
+    public boolean acceptTruco(Player player) {
         for (;;) {
             System.out.println(player.playerName() + ", você aceita? (s/n): ");
             scanner.nextLine();
@@ -232,11 +303,9 @@ public class Game {
             char charResponse = response.charAt(0);
 
             if (charResponse == 'n') {
-                player.setAccept(false);
-                break;
+                return false;
             } else if (charResponse == 's') {
-                player.setAccept(true);
-                break;
+                return true;
             } else {
                 System.out.println("A resposta deve ser 's' ou 'n'\n");
             }
@@ -295,6 +364,32 @@ public class Game {
             System.out.println(player2.playerName() + " venceu o turno!\n");
         } else {
             System.out.println("O turno foi um empate!\n");
+        }
+    }
+
+    public void setMatchPoints() {
+        if (this.trucado == 0) {
+            if (this.tempScore > this.tempScore2) {
+                this.score1++;
+            } else if (this.tempScore2 > this.tempScore) this.score2++;
+        } else {
+            if (this.tempScore > this.tempScore2 && this.trucado == 1) {
+                this.score1 += 3;
+            } else if (this.tempScore2 > this.tempScore && this.trucado == 1) {
+                this.score2 += 3;
+            } if (this.tempScore > this.tempScore2 && this.trucado == 2) {
+                this.score1 += 6;
+            } else if (this.tempScore2 > this.tempScore && this.trucado == 2) {
+                this.score2 += 6;
+            } if (this.tempScore > this.tempScore2 && this.trucado == 3) {
+                this.score1 += 9;
+            } else if (this.tempScore2 > this.tempScore && this.trucado == 3) {
+                this.score2 += 9;
+            } if (this.tempScore > this.tempScore2 && this.trucado == 4) {
+                this.score1 += 12;
+            } else if (this.tempScore2 > this.tempScore && this.trucado == 4) {
+                this.score2 += 12;
+            }
         }
     }
 

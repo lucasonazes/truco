@@ -1,5 +1,5 @@
 // Compilar
-javac Main.java Game.java Cards.java Player.java Card.java Pair.java
+javac Main.java Game.java Cards.java Player.java Card.java
 
 // Executar
-java Main.java Game.java Cards.java Player.java Card.java Pair.java
+java Main.java Game.java Cards.java Player.java Card.java
